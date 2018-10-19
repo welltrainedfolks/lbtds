@@ -1,0 +1,18 @@
+# API configuration
+api:
+  address: "127.0.0.1"
+  port: "4800"
+# Proxy configuration
+proxy:
+  storage_type: "file"
+  color_file: "/tmp/lbtds-current"
+colors:
+  green:
+    - "web.host": "172.24.1.0:80"
+    - "ssh.host": "172.24.1.1:22"
+  green:
+    - "web.host": "172.24.2.0:80"
+    - "ssh.host": "172.24.2.1:22"
+  orange:
+    - "web.host": "172.24.3.0:80"
+    - "ssh.host": "172.24.3.1:22"
