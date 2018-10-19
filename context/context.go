@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"sync"
 	"time"
@@ -90,7 +89,30 @@ func (c *Context) InitConfiguration() {
 
 	colorsData, err := ioutil.ReadFile(normalizedColorsPath)
 	if err != nil {
-		c.Logger.Panic().Err(err).Msg("Failed to read current color file")
+		c.Logger.Debug().Err(err).Msg("Failed to read current color file. Will create one.")
+
+		newColorsFile, err := os.Create(normalizedColorsPath)
+		if err != nil {
+			c.Logger.Panic().Err(err).Msg("Failed to create current color file")
+		}
+
+		if len(c.Config.Colors) == 0 {
+			c.Logger.Panic().Err(err).Msg("There is no colors in configuration")
+		}
+		idx := 0
+		for color := range c.Config.Colors {
+			if idx == 0 {
+				newColorsFile.Write([]byte(color))
+			}
+			idx++
+		}
+
+		newColorsFile.Close()
+
+		colorsData, err = ioutil.ReadFile(normalizedColorsPath)
+		if err != nil {
+			c.Logger.Panic().Err(err).Msg("Failed to read current color file after create attempt")
+		}
 	}
 
 	c.SetCurrentColor(string(colorsData))
@@ -140,8 +162,6 @@ func (c *Context) StartAPIServer() {
 	c.Logger.Info().Msg("Starting API server on http://" + listenAddress)
 
 	c.APIServer.Handler = c.APIServerMux
-	v := reflect.ValueOf(c.APIServerMux).Elem()
-	fmt.Printf("routes: %v\n", v.FieldByName("m"))
 	go func() {
 		c.APIServer.ListenAndServe()
 	}()
