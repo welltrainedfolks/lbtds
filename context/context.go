@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -38,6 +39,14 @@ type Context struct {
 	currentColor      string
 	currentColorMutex sync.Mutex
 
+	// Color-changing channel
+	// There will be signal on each color change
+	ColorChanged chan bool
+
+	// Random source
+	// Needed for picking random exit for proxy
+	RandomSource *rand.Rand
+
 	// Are we shutting down?
 	inShutdown bool
 	// Even bools aren't goroutine-safe!
@@ -53,6 +62,9 @@ func (c *Context) Init() {
 	c.inShutdownMutex.Lock()
 	c.inShutdown = false
 	c.inShutdownMutex.Unlock()
+
+	c.ColorChanged = make(chan bool)
+	c.RandomSource = rand.New(rand.NewSource(time.Now().Unix()))
 }
 
 // InitConfiguration reads configuration from YAML and parses it in
@@ -151,6 +163,8 @@ func (c *Context) SetCurrentColor(color string) error {
 		colorsFile.Close()
 
 		c.Logger.Info().Msgf("Current color changed to %s", c.currentColor)
+
+		c.ColorChanged <- true
 	} else {
 		c.Logger.Warn().Msgf("There is no such color in configuration: %s", color)
 		err = errors.New("Invalid color name")

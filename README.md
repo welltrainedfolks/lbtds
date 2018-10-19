@@ -1,4 +1,4 @@
-# LBTDS — Load Balancer That Don't Suck
+# LBTDS — Load Balancer That Doesn't Suck
 
 At least we hope so.
 

@@ -8,11 +8,38 @@ proxy:
   color_file: "/tmp/lbtds-current"
 colors:
   green:
-    - "web.host": "172.24.1.0:80"
-    - "ssh.host": "172.24.1.1:22"
-  green:
-    - "web.host": "172.24.2.0:80"
-    - "ssh.host": "172.24.2.1:22"
+    - source: "web.host"
+      destinations:
+        - "172.24.1.0:80"
+        - "172.24.1.1:80"
+    - source: "ssh.host"
+      destinations:
+        - "172.24.1.0:22"
+        - "172.24.1.1:22"
+    - source: "172.24.5.2:8080"
+      destinations:
+        - "127.0.0.1:8080"
+  blue:
+    - source: "web.host"
+      destinations:
+        - "172.24.2.0:80"
+        - "172.24.2.1:80"
+    - source: "ssh.host"
+      destinations:
+        - "172.24.2.0:22"
+        - "172.24.2.1:22"
+    - source: "172.24.5.2:8080"
+      destinations:
+        - "127.0.0.1:8080"
   orange:
-    - "web.host": "172.24.3.0:80"
-    - "ssh.host": "172.24.3.1:22"
+    - source: "web.host"
+      destinations:
+        - "172.24.3.0:80"
+        - "172.24.3.1:80"
+    - source: "ssh.host"
+      destinations:
+        - "172.24.3.0:22"
+        - "172.24.3.1:22"
+    - source: "172.24.5.2:8080"
+      destinations:
+        - "127.0.0.1:8080"

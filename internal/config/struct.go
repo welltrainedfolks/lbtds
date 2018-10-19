@@ -7,7 +7,7 @@ package config
 // Struct is a main configuration structure that holds all other
 // structs within.
 type Struct struct {
-	API    API                            `yaml:"api"`
-	Proxy  Proxy                          `yaml:"proxy"`
-	Colors map[string][]map[string]string `yaml:"colors"`
+	API    API                      `yaml:"api"`
+	Proxy  Proxy                    `yaml:"proxy"`
+	Colors map[string][]ProxyConfig `yaml:"colors"`
 }

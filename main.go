@@ -10,6 +10,7 @@ import (
 
 	"source.hodakov.me/fat0troll/lbtds/context"
 	"source.hodakov.me/fat0troll/lbtds/domains/colors/v1"
+	"source.hodakov.me/fat0troll/lbtds/domains/proxies/v1"
 )
 
 func main() {
@@ -21,6 +22,7 @@ func main() {
 	c.InitAPIServer()
 
 	colorsv1.Initialize(c)
+	proxiesv1.Initialize(c)
 
 	c.StartAPIServer()
 
