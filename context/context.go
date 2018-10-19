@@ -5,6 +5,7 @@
 package context
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -81,41 +82,11 @@ func (c *Context) InitConfiguration() {
 
 	c.Logger.Info().Msg("Configuration file parsed successfully")
 
-	normalizedColorsPath, err := filepath.Abs(c.Config.Proxy.ColorFile)
-	if err != nil {
-		c.Logger.Panic().Msgf("Failed to normalize current color file path. Path supplied: '%s'", c.Config.Proxy.ColorFile)
-	}
-	c.Logger.Debug().Msgf("Current color file path: %s", normalizedColorsPath)
-
-	colorsData, err := ioutil.ReadFile(normalizedColorsPath)
-	if err != nil {
-		c.Logger.Debug().Err(err).Msg("Failed to read current color file. Will create one.")
-
-		newColorsFile, err := os.Create(normalizedColorsPath)
-		if err != nil {
-			c.Logger.Panic().Err(err).Msg("Failed to create current color file")
-		}
-
-		if len(c.Config.Colors) == 0 {
-			c.Logger.Panic().Err(err).Msg("There is no colors in configuration")
-		}
-		idx := 0
-		for color := range c.Config.Colors {
-			if idx == 0 {
-				newColorsFile.Write([]byte(color))
-			}
-			idx++
-		}
-
-		newColorsFile.Close()
-
-		colorsData, err = ioutil.ReadFile(normalizedColorsPath)
-		if err != nil {
-			c.Logger.Panic().Err(err).Msg("Failed to read current color file after create attempt")
-		}
+	if len(c.Config.Colors) == 0 {
+		c.Logger.Panic().Err(err).Msg("There is no colors in configuration")
 	}
 
-	c.SetCurrentColor(string(colorsData))
+	c.GetCurrentColor()
 }
 
 // InitAPIServer initializes API server mux
@@ -136,17 +107,57 @@ func (c *Context) IsShuttingDown() bool {
 
 // GetCurrentColor gets current color for application
 func (c *Context) GetCurrentColor() string {
-	c.currentColorMutex.Lock()
-	defer c.currentColorMutex.Unlock()
+	if c.currentColor == "" {
+		normalizedColorsPath, err := filepath.Abs(c.Config.Proxy.ColorFile)
+		if err != nil {
+			c.Logger.Panic().Msgf("Failed to normalize current color file path. Path supplied: '%s'", c.Config.Proxy.ColorFile)
+		}
+		c.Logger.Debug().Msgf("Current color file path: %s", normalizedColorsPath)
+
+		colorsData, err := ioutil.ReadFile(normalizedColorsPath)
+		if err != nil {
+			idx := 0
+			for color := range c.Config.Colors {
+				if idx == 0 {
+					c.SetCurrentColor(color)
+				}
+				idx++
+			}
+		} else {
+			c.currentColor = string(colorsData)
+		}
+	}
 	return c.currentColor
 }
 
 // SetCurrentColor sets current color for application
-func (c *Context) SetCurrentColor(color string) {
+func (c *Context) SetCurrentColor(color string) error {
+	var err error
 	c.currentColorMutex.Lock()
-	c.currentColor = color
+	if c.Config.Colors[color] != nil {
+		c.currentColor = color
+
+		normalizedColorsPath, err := filepath.Abs(c.Config.Proxy.ColorFile)
+		if err != nil {
+			c.Logger.Panic().Msgf("Failed to normalize current color file path. Path supplied: '%s'", c.Config.Proxy.ColorFile)
+		}
+
+		colorsFile, err := os.OpenFile(normalizedColorsPath, os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			c.Logger.Panic().Err(err).Msg("Failed to open current color file or create one")
+		}
+		colorsFile.Truncate(0)
+		colorsFile.Write([]byte(color))
+		colorsFile.Close()
+
+		c.Logger.Info().Msgf("Current color changed to %s", c.currentColor)
+	} else {
+		c.Logger.Warn().Msgf("There is no such color in configuration: %s", color)
+		err = errors.New("Invalid color name")
+	}
+
 	c.currentColorMutex.Unlock()
-	c.Logger.Info().Msgf("Current color changed to %s", c.currentColor)
+	return err
 }
 
 // SetShutdown sets shutdown flag to true.
