@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"source.hodakov.me/fat0troll/lbtds/context"
+	"source.hodakov.me/fat0troll/lbtds/domains/colors/v1"
 )
 
 func main() {
@@ -17,6 +18,11 @@ func main() {
 
 	c.Logger.Info().Msgf("Starting LBTDS version %s", context.VERSION)
 	c.InitConfiguration()
+	c.InitAPIServer()
+
+	colorsv1.Initialize(c)
+
+	c.StartAPIServer()
 
 	// CTRL+C handler.
 	interrupt := make(chan os.Signal, 1)
