@@ -1,0 +1,36 @@
+# API configuration.
+# This API shouldn't be exposed to public!
+api:
+  address: "127.0.0.1"
+  port: "4800"
+# Proxy configuration
+proxy:
+  storage_type: "file"
+  color_file: "/tmp/lbtds-current"
+colors:
+  green:
+    - type: "http"
+      listen_on: "127.0.0.1:8100"
+      source: "web.host"
+      destinations:
+        - "127.0.0.1:8123"
+        - "127.0.0.1:8124"
+    - type: "http"
+      listen_on: "127.0.0.1:8200"
+      source: "web2.host"
+      destinations:
+        - "127.0.0.1:8223"
+        - "127.0.0.1:8224"
+  blue:
+    - type: "http"
+      listen_on: "127.0.0.1:8100"
+      source: "web.host"
+      destinations:
+        - "127.0.0.1:9123"
+        - "127.0.0.1:9124"
+    - type: "http"
+      listen_on: "127.0.0.1:8200"
+      source: "web2.host"
+      destinations:
+        - "127.0.0.1:9223"
+        - "127.0.0.1:9224"
