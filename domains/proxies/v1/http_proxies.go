@@ -42,7 +42,12 @@ func startHTTPProxy(listenOn string, domain string, dst []string) {
 	}
 
 	go func() {
-		srv.ListenAndServe()
+		err := srv.ListenAndServe()
+		if err != nil {
+			// It will always throw an error on graceful shutdown so it's
+			// considered warning
+			proxiesModuleLog.Warn().Err(err).Msgf("Proxy server on %s going down", srv.Addr)
+		}
 	}()
 
 	httpProxies = append(httpProxies, srv)
@@ -101,6 +106,11 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add(header, value)
 		}
 	}
-	io.Copy(w, proxyRsp.Body)
+	_, err = io.Copy(w, proxyRsp.Body)
+	if err != nil {
+		proxiesModuleLog.Error().Err(err).Msg("Can't write response to upstream")
+		http.Error(w, "Can't write response to upstream", 502)
+		return
+	}
 	proxyRsp.Body.Close()
 }

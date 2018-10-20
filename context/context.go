@@ -5,6 +5,7 @@
 package context
 
 import (
+	ctx "context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -22,7 +23,7 @@ import (
 )
 
 // VERSION is our current version
-const VERSION = "0.0.2"
+const VERSION = "0.0.9"
 
 // Context is the main application context. This struct handles operations
 // between all parts of the application
@@ -131,7 +132,10 @@ func (c *Context) GetCurrentColor() string {
 			idx := 0
 			for color := range c.Config.Colors {
 				if idx == 0 {
-					c.SetCurrentColor(color)
+					err = c.SetCurrentColor(color)
+					if err != nil {
+						c.Logger.Warn().Err(err).Msgf("Failed to change color to %s", color)
+					}
 				}
 				idx++
 			}
@@ -158,8 +162,14 @@ func (c *Context) SetCurrentColor(color string) error {
 		if err != nil {
 			c.Logger.Panic().Err(err).Msg("Failed to open current color file or create one")
 		}
-		colorsFile.Truncate(0)
-		colorsFile.Write([]byte(color))
+		err = colorsFile.Truncate(0)
+		if err != nil {
+			c.Logger.Panic().Err(err).Msg("Failed to truncate current color file")
+		}
+		_, err = colorsFile.Write([]byte(color))
+		if err != nil {
+			c.Logger.Warn().Err(err).Msg("Failed to write current color to file")
+		}
 		colorsFile.Close()
 
 		c.Logger.Info().Msgf("Current color changed to %s", c.currentColor)
@@ -188,7 +198,12 @@ func (c *Context) StartAPIServer() {
 
 	c.APIServer.Handler = c.APIServerMux
 	go func() {
-		c.APIServer.ListenAndServe()
+		err := c.APIServer.ListenAndServe()
+		// It will always throw an error on graceful shutdown so it's considered
+		// as warning
+		if err != nil {
+			c.Logger.Warn().Err(err).Msgf("API server on http://%s gone down", listenAddress)
+		}
 	}()
 
 	count := 0
@@ -222,7 +237,7 @@ func (c *Context) StartAPIServer() {
 // Shutdown shutdowns context-related things.
 func (c *Context) Shutdown() {
 	c.Logger.Info().Msg("Shutting down API server...")
-	err := c.APIServer.Shutdown(nil)
+	err := c.APIServer.Shutdown(ctx.TODO())
 	if err != nil {
 		c.Logger.Error().Msgf("Failed to shutdown API server: %s", err.Error())
 	}

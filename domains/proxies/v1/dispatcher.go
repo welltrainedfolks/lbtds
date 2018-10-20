@@ -4,6 +4,8 @@
 package proxiesv1
 
 import (
+	"context"
+
 	"github.com/rs/zerolog"
 )
 
@@ -35,7 +37,10 @@ func dispatchChange() {
 	httpProxiesMutex.Lock()
 	for _, proxy := range httpProxies {
 		dispatcherModuleLog.Debug().Msgf("Stopping proxy on %s...", proxy.Addr)
-		proxy.Shutdown(nil)
+		err := proxy.Shutdown(context.TODO())
+		if err != nil {
+			dispatcherModuleLog.Error().Err(err).Msg("Failed to shut down proxy")
+		}
 	}
 	httpProxiesMutex.Unlock()
 
