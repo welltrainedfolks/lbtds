@@ -12,7 +12,11 @@ Our goals is to provide as tiny as possible load balancer, compatible with "blue
 
 ## Current status
 
-This software is under development and in early stages. Some things may break.
+This software is under development and in early stages. Some things may break, but mostly it is already good enough to try in production.
+
+## Usage examples
+
+See ``examples/`` folder of this repository.
 
 ## ToDo
 
