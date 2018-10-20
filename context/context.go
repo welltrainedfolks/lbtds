@@ -23,7 +23,7 @@ import (
 )
 
 // VERSION is our current version
-const VERSION = "0.0.9"
+const VERSION = "0.1.0"
 
 // Context is the main application context. This struct handles operations
 // between all parts of the application
