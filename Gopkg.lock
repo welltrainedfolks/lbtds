@@ -2,6 +2,26 @@
 
 
 [[projects]]
+  digest = "1:cdbed6a7b574b13bbabcd8c36c5be56d6444789bab21fcd37d39655eab0b2141"
+  name = "github.com/klauspost/compress"
+  packages = [
+    "flate",
+    "gzip",
+    "zlib",
+  ]
+  pruneopts = "UT"
+  revision = "b939724e787a27c0005cabe3f78e7ed7987ac74f"
+  version = "v1.4.0"
+
+[[projects]]
+  digest = "1:4ea0668d490ca32a38366453a486e2e8c60fbdaf1f2607c96b4a093d8a5c8de7"
+  name = "github.com/klauspost/cpuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ae7887de9fa5d2db4eaa8174a7eff2c1ac00f2da"
+  version = "v1.1"
+
+[[projects]]
   digest = "1:5bc8f93f977b72a7a5264725c3bab275e69de0cc3e5c0dc1ee56feb564c33f03"
   name = "github.com/rs/zerolog"
   packages = [
@@ -12,6 +32,26 @@
   pruneopts = "UT"
   revision = "338f9bc14084d22cb8eeacd6492861f8449d715c"
   version = "v1.9.1"
+
+[[projects]]
+  digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
+  name = "github.com/valyala/bytebufferpool"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:28d98cdbcbe4b4c2a22f8121d3bffbe06c42f2be7ce734c4cd042a4b3bd6e84d"
+  name = "github.com/valyala/fasthttp"
+  packages = [
+    ".",
+    "fasthttputil",
+    "stackless",
+  ]
+  pruneopts = "UT"
+  revision = "4087354082e1ab9a610705ec9f7949603d3c46ab"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
@@ -26,6 +66,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/rs/zerolog",
+    "github.com/valyala/fasthttp",
     "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"

@@ -1,23 +1,23 @@
 // LBTDS — Load balancer that doesn't suck
 // Copyright (c) 2018 Vladimir "fat0troll" Hodakov
+// Copyright (c) 2018 Stanislav N. aka pztrn
 
 package proxiesv1
 
 import (
-	"io"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/valyala/fasthttp"
 )
 
 var (
 	proxiesModuleLog zerolog.Logger
 
 	// bunch of http.Server, which represents current proxy list
-	httpProxies      []*http.Server
+	httpProxies      []*fasthttp.Server
 	httpProxiesMutex sync.Mutex
 )
 
@@ -36,19 +36,20 @@ func initProxies() {
 func startHTTPProxy(listenOn string, domain string, dst []string) {
 	proxiesModuleLog.Debug().Msgf("Starting proxying on %s for domain %s to %s...", listenOn, domain, strings.Join(dst, ", "))
 
-	srv := &http.Server{
-		Addr:    listenOn,
-		Handler: newHTTPProxy(domain, dst),
+	srvHandler := newHTTPProxy(domain, dst)
+
+	srv := &fasthttp.Server{
+		Handler: srvHandler.HandleFastHTTP,
 	}
 
-	go func() {
-		err := srv.ListenAndServe()
+	go func(addr string) {
+		err := srv.ListenAndServe(listenOn)
 		if err != nil {
 			// It will always throw an error on graceful shutdown so it's
 			// considered warning
-			proxiesModuleLog.Warn().Err(err).Msgf("Proxy server on %s going down", srv.Addr)
+			proxiesModuleLog.Warn().Err(err).Msgf("Proxy server on %s going down", addr)
 		}
-	}()
+	}(listenOn)
 
 	httpProxies = append(httpProxies, srv)
 }
@@ -61,56 +62,33 @@ func newHTTPProxy(domain string, dst []string) *HTTPProxy {
 	return &proxy
 }
 
-func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+// HandleFastHTTP handles requests for HTTPProxy
+func (p *HTTPProxy) HandleFastHTTP(ctx *fasthttp.RequestCtx) {
 	start := time.Now()
-	defer proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", r.Host).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
+	defer proxiesModuleLog.Info().Str("remote", ctx.RemoteAddr().String()).Str("domain", string(ctx.Host())).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
 
 	// Check if we have required domain in received request.
-	if r.Host != p.Domain {
-		http.Error(w, "Invalid domain", http.StatusBadRequest)
+	if string(ctx.Host()) != p.Domain {
+		ctx.Error("Invalid domain", fasthttp.StatusNotFound)
 		return
 	}
 
-	url := r.URL
-	url.Host = p.Destinations[c.RandomSource.Intn(len(p.Destinations))]
-	url.Scheme = "http"
+	destinationHost := p.Destinations[c.RandomSource.Intn(len(p.Destinations))]
+	url := ctx.URI()
+	url.SetHost(destinationHost)
 
 	proxiesModuleLog.Debug().Msgf("Proxy request catched. Will go to %s", url.String())
 
-	proxyReq, err := http.NewRequest(r.Method, url.String(), r.Body)
+	proxyRequest := ctx.Request
+	proxyRequest.SetRequestURI(url.String())
+	proxyRequest.Header.Set("Host", destinationHost)
+	proxyRequest.Header.Set("X-Forwarded-For", ctx.RemoteAddr().String())
+
+	proxyClient := &fasthttp.Client{}
+	err := proxyClient.Do(&proxyRequest, &ctx.Response)
 	if err != nil {
-		http.Error(w, "Internal error", 500)
+		proxiesModuleLog.Error().Err(err).Msg("Failed to deliver request")
+		ctx.Error("Failed to deliver request", fasthttp.StatusBadGateway)
 		return
 	}
-
-	proxyReq.Header.Set("Host", r.Host)
-	proxyReq.Header.Set("X-Forwarded-For", r.RemoteAddr)
-
-	for header, values := range r.Header {
-		for _, value := range values {
-			proxyReq.Header.Add(header, value)
-		}
-	}
-
-	client := &http.Client{}
-	proxyRsp, err := client.Do(proxyReq)
-	if err != nil {
-		proxiesModuleLog.Error().Err(err).Msg("Can't connect to downstream")
-		http.Error(w, "Can't connect to downstream", 502)
-		return
-	}
-
-	for header, values := range proxyRsp.Header {
-		for _, value := range values {
-			w.Header().Add(header, value)
-		}
-	}
-	_, err = io.Copy(w, proxyRsp.Body)
-	if err != nil {
-		proxiesModuleLog.Error().Err(err).Msg("Can't write response to upstream")
-		http.Error(w, "Can't write response to upstream", 502)
-		return
-	}
-	proxyRsp.Body.Close()
 }
