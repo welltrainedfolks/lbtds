@@ -14,6 +14,14 @@ Our goals is to provide as tiny as possible load balancer, compatible with "blue
 
 This software is under development and in early stages. Some things may break.
 
+## ToDo
+
+* ACME (LetsEncrypt) support.
+* TCP proxifying support.
+* Tests and benchmarks.
+* Statistics exporting (e.g. for Prometheus).
+* ...maybe more, take a look at [issues page](https://source.hodakov.me/fat0troll/lbtds/issues).
+
 ## License
 
 See LICENSE file for details.

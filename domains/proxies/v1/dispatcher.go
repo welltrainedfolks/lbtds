@@ -32,12 +32,14 @@ func awaitColorChanged() {
 func dispatchChange() {
 	dispatcherModuleLog.Debug().Msg("Color selected. Starting proxies...")
 
-	for i := range proxies {
-		dispatcherModuleLog.Debug().Msgf("Stopping proxy on %s...", proxies[i].Addr)
-		proxies[i].Shutdown(nil)
+	httpProxiesMutex.Lock()
+	for _, proxy := range httpProxies {
+		dispatcherModuleLog.Debug().Msgf("Stopping proxy on %s...", proxy.Addr)
+		proxy.Shutdown(nil)
 	}
+	httpProxiesMutex.Unlock()
 
 	for _, proxy := range c.Config.Colors[c.GetCurrentColor()] {
-		startProxy(proxy.Source, proxy.Destinations)
+		startHTTPProxy(proxy.ListenOn, proxy.Source, proxy.Destinations)
 	}
 }

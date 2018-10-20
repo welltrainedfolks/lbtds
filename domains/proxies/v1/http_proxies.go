@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -15,12 +17,13 @@ var (
 	proxiesModuleLog zerolog.Logger
 
 	// bunch of http.Server, which represents current proxy list
-	proxies []*http.Server
+	httpProxies      []*http.Server
+	httpProxiesMutex sync.Mutex
 )
 
-// Proxy handles ServeHTTP function for passing data inside proxy
-type Proxy struct {
-	Source       string
+// HTTPProxy handles ServeHTTP function for passing data inside proxy
+type HTTPProxy struct {
+	Domain       string
 	Destinations []string
 }
 
@@ -29,32 +32,40 @@ func initProxies() {
 	proxiesModuleLog.Info().Msg("Initializing proxies...")
 }
 
-// startProxy starts proxy with desired configuration and adds it to proxies array
-func startProxy(src string, dst []string) {
-	proxiesModuleLog.Debug().Msgf("Starting proxying on %s to %s...", src, strings.Join(dst, ", "))
+// startHTTPProxy starts proxy with desired configuration and adds it to proxies array
+func startHTTPProxy(listenOn string, domain string, dst []string) {
+	proxiesModuleLog.Debug().Msgf("Starting proxying on %s for domain %s to %s...", listenOn, domain, strings.Join(dst, ", "))
 
 	srv := &http.Server{
-		Addr:    src,
-		Handler: newProxy(src, dst),
+		Addr:    listenOn,
+		Handler: newHTTPProxy(domain, dst),
 	}
 
 	go func() {
 		srv.ListenAndServe()
 	}()
 
-	proxies = append(proxies, srv)
+	httpProxies = append(httpProxies, srv)
 }
 
-func newProxy(src string, dst []string) *Proxy {
-	proxy := Proxy{
-		Source:       src,
+func newHTTPProxy(domain string, dst []string) *HTTPProxy {
+	proxy := HTTPProxy{
+		Domain:       domain,
 		Destinations: dst,
 	}
 	return &proxy
 }
 
-func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+	start := time.Now()
+	defer proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", r.Host).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
+
+	// Check if we have required domain in received request.
+	if r.Host != p.Domain {
+		http.Error(w, "Invalid domain", http.StatusBadRequest)
+		return
+	}
 
 	url := r.URL
 	url.Host = p.Destinations[c.RandomSource.Intn(len(p.Destinations))]

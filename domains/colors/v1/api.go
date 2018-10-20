@@ -6,6 +6,7 @@ package colorsv1
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -27,7 +28,8 @@ func initAPI() {
 
 // ChangeColor handles color changing for application context
 func ChangeColor(w http.ResponseWriter, r *http.Request) {
-	apiModuleLog.Debug().Msg("Received color change request")
+	start := time.Now()
+	defer apiModuleLog.Info().Str("remote", r.RemoteAddr).TimeDiff("request time (s)", time.Now(), start).Msg("Received color switch HTTP request")
 	switch r.Method {
 	case http.MethodPost:
 		if r.Body == nil {
