@@ -23,7 +23,7 @@ go run ../../main.go
 Try it (in third console):
 
 ```
-curl -H "Content-Type: application/json; charset=UTF-8" -d '{"color": "blue"}' -X POST http://127.0.0.1:4800/
+curl -H "Host: web2.host" http://127.0.0.1:8200
 ```
 
 Change color:
@@ -31,3 +31,5 @@ Change color:
 ```
 curl -H "Content-Type: application/json; charset=UTF-8" -d '{"color": "blue"}' -X POST http://127.0.0.1:4800/
 ```
+
+Change "blue" to "green" and retry curl to 8200.
