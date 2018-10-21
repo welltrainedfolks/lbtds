@@ -14,6 +14,26 @@ Our goals is to provide as tiny as possible load balancer, compatible with "blue
 
 This software is under development and in early stages. Some things may break, but mostly it is already good enough to try in production.
 
+## A warning
+
+Repository at Github is a mirror, all development takes place at https://source.hodakov.me/fat0troll/lbtds. Please, file bugs and PRs there.
+
+About rationale of making this decision, please, read [here](https://source.hodakov.me/fat0troll/lbtds/src/branch/master/CONTRIBUTION.md).
+
+## Installation
+
+As simple as:
+
+```
+go get source.hodakov.me/fat0troll/lbtds
+```
+
+Do not try to go get from Github or you'll have plenty of errors!
+
+## Configuration
+
+Take a look at examples for generic configuration file. Documentation on that topic will be ready soon.
+
 ## Usage examples
 
 See ``examples/`` folder of this repository.
