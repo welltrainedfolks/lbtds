@@ -64,7 +64,10 @@ func newHTTPProxy(domain string, dst []string) *HTTPProxy {
 func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	start := time.Now()
-	defer proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", r.Host).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
+	// ToDo: strict or not strict domain forwarding. For now we will
+	// forward only domain name, without port.
+	domainToForward := strings.Split(r.Host, ":")[0]
+	defer proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", domainToForward).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
 
 	// Check if we have required domain in received request.
 	if r.Host != p.Domain {
@@ -84,7 +87,7 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	proxyReq.Header.Set("Host", r.Host)
+	proxyReq.Header.Set("Host", domainToForward)
 	proxyReq.Header.Set("X-Forwarded-For", r.RemoteAddr)
 
 	for header, values := range r.Header {
