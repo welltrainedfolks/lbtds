@@ -93,7 +93,8 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	proxyReq.Header.Set("Host", domainToForward)
+	//proxyReq.Header.Set("Host", domainToForward)
+	proxyReq.Host = domainToForward
 	proxyReq.Header.Set("X-Forwarded-For", r.RemoteAddr)
 
 	for header, values := range r.Header {

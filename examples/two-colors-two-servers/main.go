@@ -56,7 +56,7 @@ func createHTTPServer(port string, host string, color string, number string) cha
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Request received for color: " + color + ", host " + host + ", backend#" + number)
+		fmt.Println("Request received for color: " + color + ", host " + host + " (from request: " + r.Host + "), backend#" + number)
 		w.WriteHeader(200)
 		w.Write([]byte("Color: " + color + ", host " + host + ", backend#" + number))
 	})
