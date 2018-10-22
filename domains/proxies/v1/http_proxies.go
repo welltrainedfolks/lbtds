@@ -62,16 +62,19 @@ func newHTTPProxy(domain string, dst []string) *HTTPProxy {
 }
 
 func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
 	start := time.Now()
 	// ToDo: strict or not strict domain forwarding. For now we will
 	// forward only domain name, without port.
 	domainToForward := strings.Split(r.Host, ":")[0]
-	defer proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", domainToForward).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
+	var proxifiedBytesCount int64
+	var responseCode int
 
 	// Check if we have required domain in received request.
-	if r.Host != p.Domain {
-		http.Error(w, "Invalid domain", http.StatusBadRequest)
+	if domainToForward != p.Domain {
+		proxiesModuleLog.Error().Str("domain", domainToForward).Msg("Invalid domain passed")
+		responseCode = http.StatusBadRequest
+		http.Error(w, "Invalid domain", responseCode)
+		proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", domainToForward).Int("code", responseCode).Int64("proxified bytes", proxifiedBytesCount).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
 		return
 	}
 
@@ -79,11 +82,14 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	url.Host = p.Destinations[c.RandomSource.Intn(len(p.Destinations))]
 	url.Scheme = "http"
 
-	proxiesModuleLog.Debug().Msgf("Proxy request catched. Will go to %s", url.String())
+	proxiesModuleLog.Debug().Str("domain", domainToForward).Msgf("Proxy request catched. Will go to %s", url.String())
 
 	proxyReq, err := http.NewRequest(r.Method, url.String(), r.Body)
 	if err != nil {
-		http.Error(w, "Internal error", 500)
+		proxiesModuleLog.Error().Str("domain", domainToForward).Err(err).Msg("Failed to create new HTTP request to downstream")
+		responseCode = http.StatusInternalServerError
+		http.Error(w, "Internal error", responseCode)
+		proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", domainToForward).Int("code", responseCode).Int64("proxified bytes", proxifiedBytesCount).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
 		return
 	}
 
@@ -99,8 +105,9 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
 	proxyRsp, err := client.Do(proxyReq)
 	if err != nil {
-		proxiesModuleLog.Error().Err(err).Msg("Can't connect to downstream")
-		http.Error(w, "Can't connect to downstream", 502)
+		proxiesModuleLog.Error().Str("domain", domainToForward).Err(err).Msg("Can't connect to downstream")
+		http.Error(w, "Can't connect to downstream", responseCode)
+		proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", domainToForward).Int("code", responseCode).Int64("proxified bytes", proxifiedBytesCount).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
 		return
 	}
 
@@ -109,11 +116,15 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add(header, value)
 		}
 	}
-	_, err = io.Copy(w, proxyRsp.Body)
+	proxifiedBytesCount, err = io.Copy(w, proxyRsp.Body)
 	if err != nil {
 		proxiesModuleLog.Error().Err(err).Msg("Can't write response to upstream")
 		http.Error(w, "Can't write response to upstream", 502)
 		return
 	}
+
+	proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", domainToForward).Str("URI", r.URL.String()).Int64("proxified bytes", proxifiedBytesCount).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
+
 	proxyRsp.Body.Close()
+	r.Body.Close()
 }
