@@ -43,7 +43,5 @@ func main() {
 	}()
 
 	<-shutdownDone
-	c.Logger.Info().Msg("LBTDS instance shutted down")
 	os.Exit(0)
-
 }

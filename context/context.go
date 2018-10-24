@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 
@@ -101,7 +102,63 @@ func (c *Context) InitConfiguration() {
 		c.Logger.Panic().Err(err).Msg("There is no colors in configuration")
 	}
 
+	c.CheckPIDFile()
+
 	c.GetCurrentColor()
+}
+
+// CheckPIDFile checks for existing PID file and creates one if possible
+func (c *Context) CheckPIDFile() {
+	pidFile := "/tmp/lbtds.lock"
+	if c.Config.Proxy.PIDFile != "" {
+		pidFile = c.Config.Proxy.PIDFile
+	} else {
+		c.Logger.Debug().Msg("Default PID file used, use config to override")
+	}
+
+	normalizedPIDFilePath, err := filepath.Abs(pidFile)
+	if err != nil {
+		c.Logger.Panic().Err(err).Msgf("Failed to normalize PID file path. Path supplied: %s", pidFile)
+	}
+
+	c.Logger.Debug().Msgf("PID file path: %s", normalizedPIDFilePath)
+
+	// We need to fail here, not pass
+	currentPID, err := ioutil.ReadFile(normalizedPIDFilePath)
+	if err != nil {
+		// Write PID to new file
+		newPIDfile, err := os.OpenFile(normalizedPIDFilePath, os.O_RDWR|os.O_CREATE, 0755)
+		defer newPIDfile.Close()
+		if err != nil {
+			c.Logger.Panic().Err(err).Msg("Failed to create PID file")
+		}
+
+		_, err = newPIDfile.Write([]byte(strconv.Itoa(os.Getpid())))
+		if err != nil {
+			c.Logger.Panic().Err(err).Msg("Failed to write PID file")
+		}
+	} else {
+		// PID file exists
+		c.Logger.Panic().Msgf("There is already LBTDS instance with the same configuration running at PID %s. Stop it or remove PID file if instance already stopped.", string(currentPID))
+	}
+}
+
+// RemovePIDFile removes PID file on stop
+func (c *Context) RemovePIDFile() {
+	pidFile := "/tmp/lbtds.lock"
+	if c.Config.Proxy.PIDFile != "" {
+		pidFile = c.Config.Proxy.PIDFile
+	}
+
+	normalizedPIDFilePath, err := filepath.Abs(pidFile)
+	if err != nil {
+		c.Logger.Panic().Err(err).Msgf("Failed to normalize PID file path. Path supplied: %s", pidFile)
+	}
+
+	err = os.Remove(normalizedPIDFilePath)
+	if err != nil {
+		c.Logger.Error().Err(err).Msg("Failed to remove PID file")
+	}
 }
 
 // InitAPIServer initializes API server mux
@@ -152,6 +209,7 @@ func (c *Context) GetCurrentColor() string {
 func (c *Context) SetCurrentColor(color string) error {
 	var err error
 	c.currentColorMutex.Lock()
+	defer c.currentColorMutex.Unlock()
 	if c.Config.Colors[color] != nil {
 		c.currentColor = color
 
@@ -161,6 +219,7 @@ func (c *Context) SetCurrentColor(color string) error {
 		}
 
 		colorsFile, err := os.OpenFile(normalizedColorsPath, os.O_RDWR|os.O_CREATE, 0755)
+		defer colorsFile.Close()
 		if err != nil {
 			c.Logger.Panic().Err(err).Msg("Failed to open current color file or create one")
 		}
@@ -172,7 +231,6 @@ func (c *Context) SetCurrentColor(color string) error {
 		if err != nil {
 			c.Logger.Warn().Err(err).Msg("Failed to write current color to file")
 		}
-		colorsFile.Close()
 
 		c.Logger.Info().Msgf("Current color changed to %s", c.currentColor)
 
@@ -182,7 +240,6 @@ func (c *Context) SetCurrentColor(color string) error {
 		err = errors.New("Invalid color name")
 	}
 
-	c.currentColorMutex.Unlock()
 	return err
 }
 
@@ -245,6 +302,9 @@ func (c *Context) Shutdown() {
 	}
 	c.Logger.Info().Msg("Shutting down proxy streams...")
 	// TODO: Make it shut down proxy streams
+	c.Logger.Info().Msg("Dropping PID file...")
+	c.RemovePIDFile()
+	c.Logger.Info().Msgf("LBTDS v. %s gracefully stopped. Have a nice day.", VERSION)
 }
 
 // getMemoryUsage returns memory usage for logger.

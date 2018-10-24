@@ -8,4 +8,5 @@ package config
 type Proxy struct {
 	StorageType string `yaml:"storage_type"`
 	ColorFile   string `yaml:"color_file"`
+	PIDFile     string `yaml:"pid_file,omitempty"`
 }
