@@ -17,7 +17,7 @@ var (
 	proxiesModuleLog zerolog.Logger
 
 	// bunch of http.Server, which represents current proxy list
-	httpProxies      []*http.Server
+	httpProxies      map[string]*http.Server
 	httpProxiesMutex sync.Mutex
 )
 
@@ -30,6 +30,8 @@ type HTTPProxy struct {
 func initProxies() {
 	proxiesModuleLog = domainLog.With().Str("module", "proxies").Logger()
 	proxiesModuleLog.Info().Msg("Initializing proxies...")
+
+	httpProxies = make(map[string]*http.Server)
 }
 
 // startHTTPProxy starts proxy with desired configuration and adds it to proxies array
@@ -50,7 +52,7 @@ func startHTTPProxy(listenOn string, domain string, dst []string) {
 		}
 	}()
 
-	httpProxies = append(httpProxies, srv)
+	httpProxies[listenOn] = srv
 }
 
 func newHTTPProxy(domain string, dst []string) *HTTPProxy {
