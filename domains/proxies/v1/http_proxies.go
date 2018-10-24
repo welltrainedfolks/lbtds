@@ -69,6 +69,8 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var proxifiedBytesCount int64
 	var responseCode int
 
+	defer r.Body.Close()
+
 	// Check if we have required domain in received request.
 	if domainToForward != p.Domain {
 		proxiesModuleLog.Error().Str("domain", domainToForward).Msg("Invalid domain passed")
@@ -92,6 +94,7 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", domainToForward).Int("code", responseCode).Int64("proxified bytes", proxifiedBytesCount).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
 		return
 	}
+	defer proxyReq.Body.Close()
 
 	//proxyReq.Header.Set("Host", domainToForward)
 	proxyReq.Host = domainToForward
@@ -105,6 +108,7 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	client := &http.Client{}
 	proxyRsp, err := client.Do(proxyReq)
+	defer proxyRsp.Body.Close()
 	if err != nil {
 		proxiesModuleLog.Error().Str("domain", domainToForward).Err(err).Msg("Can't connect to downstream")
 		http.Error(w, "Can't connect to downstream", responseCode)
@@ -125,7 +129,4 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", domainToForward).Str("URI", r.URL.String()).Int64("proxified bytes", proxifiedBytesCount).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
-
-	proxyRsp.Body.Close()
-	r.Body.Close()
 }
