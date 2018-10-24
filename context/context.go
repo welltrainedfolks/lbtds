@@ -66,6 +66,8 @@ func (c *Context) Init() {
 
 	c.ColorChanged = make(chan bool)
 	c.RandomSource = rand.New(rand.NewSource(time.Now().Unix()))
+
+	c.Logger.Info().Msgf("LBTDS v. %s is starting...", VERSION)
 }
 
 // InitConfiguration reads configuration from YAML and parses it in

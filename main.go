@@ -17,7 +17,6 @@ func main() {
 	c := context.NewContext()
 	c.Init()
 
-	c.Logger.Info().Msgf("Starting LBTDS version %s", context.VERSION)
 	c.InitConfiguration()
 	c.InitAPIServer()
 
