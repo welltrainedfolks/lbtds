@@ -8,9 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"source.hodakov.me/fat0troll/lbtds/context"
-	"source.hodakov.me/fat0troll/lbtds/domains/colors/v1"
-	"source.hodakov.me/fat0troll/lbtds/domains/proxies/v1"
+	"lab.wtfteam.pro/wtfteam/lbtds/context"
+	"lab.wtfteam.pro/wtfteam/lbtds/domains/colors/v1"
+	"lab.wtfteam.pro/wtfteam/lbtds/domains/proxies/v1"
 )
 
 func main() {

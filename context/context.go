@@ -19,7 +19,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v2"
-	"source.hodakov.me/fat0troll/lbtds/internal/config"
+	"lab.wtfteam.pro/wtfteam/lbtds/internal/config"
 )
 
 // VERSION is our current version

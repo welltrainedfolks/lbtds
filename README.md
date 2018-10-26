@@ -16,16 +16,16 @@ This software is under development and in early stages. Some things may break, b
 
 ## A warning
 
-Repository at Github is a mirror, all development takes place at https://source.hodakov.me/fat0troll/lbtds. Please, file bugs and PRs there.
+Repository at Github is a mirror, all development takes place at <https://lab.wtfteam.pro/wtfteam/lbtds>. Please, file bugs and PRs there.
 
-About rationale of making this decision, please, read [here](https://source.hodakov.me/fat0troll/lbtds/src/branch/master/CONTRIBUTION.md).
+About rationale of making this decision, please, read [here](https://lab.wtfteam.pro/wtfteam/lbtds/blob/master/CONTRIBUTING.md).
 
 ## Installation
 
 As simple as:
 
 ```
-go get source.hodakov.me/fat0troll/lbtds
+go get lab.wtfteam.pro/wtfteam/lbtds
 ```
 
 Do not try to go get from Github or you'll have plenty of errors!
@@ -44,7 +44,7 @@ See ``examples/`` folder of this repository.
 * TCP proxifying support.
 * Tests and benchmarks.
 * Statistics exporting (e.g. for Prometheus).
-* ...maybe more, take a look at [issues page](https://source.hodakov.me/fat0troll/lbtds/issues).
+* ...maybe more, take a look at [issues page](https://lab.wtfteam.pro/wtfteam/lbtds/issues).
 
 ## License
 

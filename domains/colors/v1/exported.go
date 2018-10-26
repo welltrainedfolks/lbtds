@@ -5,7 +5,7 @@ package colorsv1
 
 import (
 	"github.com/rs/zerolog"
-	"source.hodakov.me/fat0troll/lbtds/context"
+	"lab.wtfteam.pro/wtfteam/lbtds/context"
 )
 
 var (
