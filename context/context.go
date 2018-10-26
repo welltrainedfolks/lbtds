@@ -109,17 +109,7 @@ func (c *Context) InitConfiguration() {
 
 // CheckPIDFile checks for existing PID file and creates one if possible
 func (c *Context) CheckPIDFile() {
-	pidFile := "/tmp/lbtds.lock"
-	if c.Config.Proxy.PIDFile != "" {
-		pidFile = c.Config.Proxy.PIDFile
-	} else {
-		c.Logger.Debug().Msg("Default PID file used, use config to override")
-	}
-
-	normalizedPIDFilePath, err := filepath.Abs(pidFile)
-	if err != nil {
-		c.Logger.Panic().Err(err).Msgf("Failed to normalize PID file path. Path supplied: %s", pidFile)
-	}
+	normalizedPIDFilePath := c.getPIDFilePath()
 
 	c.Logger.Debug().Msgf("PID file path: %s", normalizedPIDFilePath)
 
@@ -145,17 +135,9 @@ func (c *Context) CheckPIDFile() {
 
 // RemovePIDFile removes PID file on stop
 func (c *Context) RemovePIDFile() {
-	pidFile := "/tmp/lbtds.lock"
-	if c.Config.Proxy.PIDFile != "" {
-		pidFile = c.Config.Proxy.PIDFile
-	}
+	normalizedPIDFilePath := c.getPIDFilePath()
 
-	normalizedPIDFilePath, err := filepath.Abs(pidFile)
-	if err != nil {
-		c.Logger.Panic().Err(err).Msgf("Failed to normalize PID file path. Path supplied: %s", pidFile)
-	}
-
-	err = os.Remove(normalizedPIDFilePath)
+	err := os.Remove(normalizedPIDFilePath)
 	if err != nil {
 		c.Logger.Error().Err(err).Msg("Failed to remove PID file")
 	}
@@ -316,4 +298,30 @@ func (c *Context) getMemoryUsage(e *zerolog.Event, level zerolog.Level, message 
 	e.Str("memsys", fmt.Sprintf("%dMB", m.Sys/1024/1024))
 	e.Str("numgc", fmt.Sprintf("%d", m.NumGC))
 
+}
+
+// getPIDFilePath returns PID file path
+func (c *Context) getPIDFilePath() string {
+	var pidFile string
+	if c.Config.Proxy.PIDFile != "" {
+		pidFile = c.Config.Proxy.PIDFile
+	} else {
+		switch runtime.GOOS {
+		case "windows":
+			c.Logger.Panic().Msg("LBTDS doesn't support Windows at this time. Please, read CONTRIBUTING.md for adding Windows support if you're interested in it.")
+		case "darwin":
+			pidFile = "/usr/local/var/run/lbtds.pid"
+		case "linux":
+			pidFile = "/var/run/lbtds.pid"
+		default:
+			pidFile = "/var/run/lbtds.pid"
+		}
+	}
+
+	normalizedPIDFilePath, err := filepath.Abs(pidFile)
+	if err != nil {
+		c.Logger.Panic().Err(err).Msgf("Failed to normalize PID file path. Path supplied: %s", pidFile)
+	}
+
+	return normalizedPIDFilePath
 }
