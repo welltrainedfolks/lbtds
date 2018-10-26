@@ -123,7 +123,7 @@ func (c *Context) CheckPIDFile() {
 			c.Logger.Panic().Err(err).Msg("Failed to create PID file")
 		}
 
-		_, err = newPIDfile.Write([]byte(strconv.Itoa(os.Getpid())))
+		_, err = newPIDfile.Write([]byte(strconv.Itoa(os.Getppid())))
 		if err != nil {
 			c.Logger.Panic().Err(err).Msg("Failed to write PID file")
 		}
@@ -137,7 +137,16 @@ func (c *Context) CheckPIDFile() {
 func (c *Context) RemovePIDFile() {
 	normalizedPIDFilePath := c.getPIDFilePath()
 
-	err := os.Remove(normalizedPIDFilePath)
+	parentPID, err := ioutil.ReadFile(normalizedPIDFilePath)
+	if err != nil {
+		c.Logger.Error().Err(err).Msg("Failed to read PID file")
+	}
+
+	if string(parentPID) != strconv.Itoa(os.Getppid()) {
+		c.Logger.Error().Err(err).Msgf("PID file contains wrong PID: expected %d, but got %s", os.Getppid(), parentPID)
+	}
+
+	err = os.Remove(normalizedPIDFilePath)
 	if err != nil {
 		c.Logger.Error().Err(err).Msg("Failed to remove PID file")
 	}
@@ -310,11 +319,11 @@ func (c *Context) getPIDFilePath() string {
 		case "windows":
 			c.Logger.Panic().Msg("LBTDS doesn't support Windows at this time. Please, read CONTRIBUTING.md for adding Windows support if you're interested in it.")
 		case "darwin":
-			pidFile = "/usr/local/var/run/lbtds.pid"
+			pidFile = "/usr/local/var/run/lbtds.lock"
 		case "linux":
-			pidFile = "/var/run/lbtds.pid"
+			pidFile = "/var/run/lbtds.lock"
 		default:
-			pidFile = "/var/run/lbtds.pid"
+			pidFile = "/var/run/lbtds.lock"
 		}
 	}
 
