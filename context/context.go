@@ -72,12 +72,15 @@ func (c *Context) Init() {
 
 	c.Flagger = flagger.New(nil)
 	c.Flagger.Initialize()
-	c.Flagger.AddFlag(&flagger.Flag{
+	err := c.Flagger.AddFlag(&flagger.Flag{
 		Name:         "config",
 		Description:  "Path to configuration file, including filename. Can be overrided with flag --config.",
 		Type:         "string",
 		DefaultValue: "./lbtds.yaml",
 	})
+	if err != nil {
+		c.Logger.Panic().Err(err).Msg("Failed to add flag to parse")
+	}
 	c.Flagger.Parse()
 
 	c.Logger.Info().Msgf("LBTDS v. %s is starting...", VERSION)
