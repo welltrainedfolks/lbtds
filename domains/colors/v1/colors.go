@@ -65,10 +65,10 @@ func SetCurrentColor(color string) error {
 		}
 
 		colorsFile, err := os.OpenFile(normalizedColorsPath, os.O_RDWR|os.O_CREATE, 0755)
-		defer colorsFile.Close()
 		if err != nil {
 			colorsModuleLog.Panic().Err(err).Msg("Failed to open current color file or create one")
 		}
+		defer colorsFile.Close()
 		err = colorsFile.Truncate(0)
 		if err != nil {
 			colorsModuleLog.Panic().Err(err).Msg("Failed to truncate current color file")

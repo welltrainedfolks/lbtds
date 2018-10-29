@@ -106,10 +106,10 @@ func (c *Context) CheckPIDFile() {
 	if err != nil {
 		// Write PID to new file
 		newPIDfile, err := os.OpenFile(normalizedPIDFilePath, os.O_RDWR|os.O_CREATE, 0755)
-		defer newPIDfile.Close()
 		if err != nil {
 			c.Logger.Panic().Err(err).Msg("Failed to create PID file")
 		}
+		defer newPIDfile.Close()
 
 		_, err = newPIDfile.Write([]byte(strconv.Itoa(os.Getppid())))
 		if err != nil {
