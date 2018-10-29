@@ -42,7 +42,7 @@ func ChangeColor(w http.ResponseWriter, r *http.Request) {
 			apiModuleLog.Error().Err(err).Msg("Failed to unmarshal POST data")
 			http.Error(w, "Invalid request body", 400)
 		}
-		err = c.SetCurrentColor(requestParams.Color)
+		err = SetCurrentColor(requestParams.Color)
 		if err != nil {
 			http.Error(w, "Invalid color", 404)
 		} else {

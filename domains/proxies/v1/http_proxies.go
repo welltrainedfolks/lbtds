@@ -112,6 +112,7 @@ func (p *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	proxyRsp, err := client.Do(proxyReq)
 	if err != nil {
 		proxiesModuleLog.Error().Str("domain", domainToForward).Err(err).Msg("Can't connect to downstream")
+		responseCode = http.StatusBadGateway
 		http.Error(w, "Can't connect to downstream", responseCode)
 		proxiesModuleLog.Info().Str("remote", r.RemoteAddr).Str("domain", domainToForward).Int("code", responseCode).Int64("proxified bytes", proxifiedBytesCount).TimeDiff("request time (s)", time.Now(), start).Msg("Received HTTP request")
 		return

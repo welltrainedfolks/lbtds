@@ -25,6 +25,8 @@ func main() {
 
 	c.StartAPIServer()
 
+	colorsv1.GetCurrentColor()
+
 	// CTRL+C handler.
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt)

@@ -6,7 +6,6 @@ package context
 
 import (
 	ctx "context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -37,14 +36,6 @@ type Context struct {
 	APIServerMux *http.ServeMux
 	APIServerUp  bool
 
-	// Current color
-	currentColor      string
-	currentColorMutex sync.Mutex
-
-	// Color-changing channel
-	// There will be signal on each color change
-	ColorChanged chan bool
-
 	// Random source
 	// Needed for picking random exit for proxy
 	RandomSource *rand.Rand
@@ -65,7 +56,6 @@ func (c *Context) Init() {
 	c.inShutdown = false
 	c.inShutdownMutex.Unlock()
 
-	c.ColorChanged = make(chan bool)
 	c.RandomSource = rand.New(rand.NewSource(time.Now().Unix()))
 
 	c.Logger.Info().Msgf("LBTDS v. %s is starting...", VERSION)
@@ -103,8 +93,6 @@ func (c *Context) InitConfiguration() {
 	}
 
 	c.CheckPIDFile()
-
-	c.GetCurrentColor()
 }
 
 // CheckPIDFile checks for existing PID file and creates one if possible
@@ -166,72 +154,6 @@ func (c *Context) IsShuttingDown() bool {
 	c.inShutdownMutex.Lock()
 	defer c.inShutdownMutex.Unlock()
 	return c.inShutdown
-}
-
-// GetCurrentColor gets current color for application
-func (c *Context) GetCurrentColor() string {
-	if c.currentColor == "" {
-		normalizedColorsPath, err := filepath.Abs(c.Config.Proxy.ColorFile)
-		if err != nil {
-			c.Logger.Panic().Msgf("Failed to normalize current color file path. Path supplied: '%s'", c.Config.Proxy.ColorFile)
-		}
-		c.Logger.Debug().Msgf("Current color file path: %s", normalizedColorsPath)
-
-		colorsData, err := ioutil.ReadFile(normalizedColorsPath)
-		if err != nil {
-			idx := 0
-			for color := range c.Config.Colors {
-				if idx == 0 {
-					err = c.SetCurrentColor(color)
-					if err != nil {
-						c.Logger.Warn().Err(err).Msgf("Failed to change color to %s", color)
-					}
-				}
-				idx++
-			}
-		} else {
-			c.currentColor = string(colorsData)
-		}
-	}
-	return c.currentColor
-}
-
-// SetCurrentColor sets current color for application
-func (c *Context) SetCurrentColor(color string) error {
-	var err error
-	c.currentColorMutex.Lock()
-	defer c.currentColorMutex.Unlock()
-	if c.Config.Colors[color] != nil {
-		c.currentColor = color
-
-		normalizedColorsPath, err := filepath.Abs(c.Config.Proxy.ColorFile)
-		if err != nil {
-			c.Logger.Panic().Msgf("Failed to normalize current color file path. Path supplied: '%s'", c.Config.Proxy.ColorFile)
-		}
-
-		colorsFile, err := os.OpenFile(normalizedColorsPath, os.O_RDWR|os.O_CREATE, 0755)
-		defer colorsFile.Close()
-		if err != nil {
-			c.Logger.Panic().Err(err).Msg("Failed to open current color file or create one")
-		}
-		err = colorsFile.Truncate(0)
-		if err != nil {
-			c.Logger.Panic().Err(err).Msg("Failed to truncate current color file")
-		}
-		_, err = colorsFile.Write([]byte(color))
-		if err != nil {
-			c.Logger.Warn().Err(err).Msg("Failed to write current color to file")
-		}
-
-		c.Logger.Info().Msgf("Current color changed to %s", c.currentColor)
-
-		c.ColorChanged <- true
-	} else {
-		c.Logger.Warn().Msgf("There is no such color in configuration: %s", color)
-		err = errors.New("Invalid color name")
-	}
-
-	return err
 }
 
 // SetShutdown sets shutdown flag to true.
