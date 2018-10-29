@@ -1,0 +1,20 @@
+image: golang:1.11
+
+stages:
+  - lint
+
+before_script:
+  - go version
+  - mkdir -p $GOPATH/src/lab.wtfteam.pro/wtfteam/
+  - ln -s $(pwd) $GOPATH/src/lab.wtfteam.pro/wtfteam/lbtds
+  - cd $GOPATH/src/lab.wtfteam.pro/wtfteam/lbtds
+
+golangci:
+  stage: lint
+  before_script:
+    - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.9
+  script:
+    - pwd
+    - golangci-lint run
+
+
