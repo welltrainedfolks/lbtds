@@ -12,7 +12,7 @@ before_script:
 golangci:
   stage: lint
   before_script:
-    - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.9
+    - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.11.2
   script:
     - pwd
     - golangci-lint run
