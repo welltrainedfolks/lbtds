@@ -11,12 +11,12 @@ before_script:
   - mkdir -p $GOPATH/src/lab.wtfteam.pro/wtfteam/
   - ln -s $(pwd) $GOPATH/src/lab.wtfteam.pro/wtfteam/lbtds
   - wget $GOLANGCI_ARCHIVE
-  - tar xf *.tar.gz -C /usr/local/bin/
+  - tar xf *.tar.gz -C /tmp
+  - mv /tmp/*/golangci-lint /usr/local/bin
   - cd $GOPATH/src/lab.wtfteam.pro/wtfteam/lbtds
 
 golangci:
   stage: lint
   script:
-    - ls /usr/local/bin
     - pwd
     - /usr/local/bin/golangci-lint run
