@@ -17,7 +17,6 @@ before_script:
 golangci:
   stage: lint
   script:
+    - ls /usr/local/bin
     - pwd
     - /usr/local/bin/golangci-lint run
-
-
