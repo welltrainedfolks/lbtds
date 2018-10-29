@@ -18,6 +18,6 @@ golangci:
   stage: lint
   script:
     - pwd
-    - golangci-lint run
+    - /usr/local/bin/golangci-lint run
 
 
