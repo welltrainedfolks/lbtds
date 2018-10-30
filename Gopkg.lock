@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  branch = "master"
+  digest = "1:14fd70f7be0e0296ca808e124d0103a7d932b90468109deb9d02014493f717db"
+  name = "github.com/pztrn/flagger"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1330c5f1b64f253b0505ee4a2417fb8be856b87d"
+
+[[projects]]
   digest = "1:5bc8f93f977b72a7a5264725c3bab275e69de0cc3e5c0dc1ee56feb564c33f03"
   name = "github.com/rs/zerolog"
   packages = [
@@ -25,6 +33,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/pztrn/flagger",
     "github.com/rs/zerolog",
     "gopkg.in/yaml.v2",
   ]

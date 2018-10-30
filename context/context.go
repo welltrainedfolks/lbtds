@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pztrn/flagger"
 	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v2"
 	"lab.wtfteam.pro/wtfteam/lbtds/internal/config"
@@ -28,8 +29,9 @@ const VERSION = "0.1.0"
 // Context is the main application context. This struct handles operations
 // between all parts of the application
 type Context struct {
-	Config *config.Struct
-	Logger zerolog.Logger
+	Config  *config.Struct
+	Flagger *flagger.Flagger
+	Logger  zerolog.Logger
 
 	// API server
 	APIServer    *http.Server
@@ -58,6 +60,19 @@ func (c *Context) Init() {
 
 	c.RandomSource = rand.New(rand.NewSource(time.Now().Unix()))
 
+	c.Flagger = flagger.New(nil)
+	c.Flagger.Initialize()
+	err := c.Flagger.AddFlag(&flagger.Flag{
+		Name:         "config",
+		Description:  "Path to configuration file, including filename. Can be overrided with flag --config.",
+		Type:         "string",
+		DefaultValue: "./lbtds.yaml",
+	})
+	if err != nil {
+		c.Logger.Panic().Err(err).Msg("Failed to add flag to parse")
+	}
+	c.Flagger.Parse()
+
 	c.Logger.Info().Msgf("LBTDS v. %s is starting...", VERSION)
 }
 
@@ -66,8 +81,10 @@ func (c *Context) Init() {
 func (c *Context) InitConfiguration() {
 	c.Logger.Info().Msg("Loading configuration files...")
 
-	// TODO: make it flaggable
-	configPath := "./lbtds.yaml"
+	configPath, err := c.Flagger.GetStringValue("config")
+	if err != nil {
+		c.Logger.Panic().Msg("Failed to read config file path from flag")
+	}
 	normalizedConfigPath, err := filepath.Abs(configPath)
 	if err != nil {
 		c.Logger.Panic().Msgf("Failed to normalize configuration path. Path supplied: '%s'", configPath)
