@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
+	"lab.wtfteam.pro/wtfteam/lbtds/domains/colors/v1"
 )
 
 var (
@@ -25,7 +26,7 @@ func initDispatcher() {
 func awaitColorChanged() {
 	// First call of dispatchChange runs at start of the balancer
 	dispatchChange()
-	for <-c.ColorChanged {
+	for <-colorsv1.ColorChanged {
 		dispatchChange()
 	}
 }
@@ -44,7 +45,7 @@ func dispatchChange() {
 	}
 	httpProxiesMutex.Unlock()
 
-	for _, proxy := range c.Config.Colors[c.GetCurrentColor()] {
+	for _, proxy := range c.Config.Colors[colorsv1.GetCurrentColor()] {
 		startHTTPProxy(proxy.ListenOn, proxy.Source, proxy.Destinations)
 	}
 }

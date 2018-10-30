@@ -6,6 +6,7 @@ package main
 import (
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	"lab.wtfteam.pro/wtfteam/lbtds/context"
@@ -14,6 +15,11 @@ import (
 )
 
 func main() {
+	// Before any real work - lock to OS thread. We shouldn't leave it until
+	// shutdown
+	runtime.LockOSThread()
+
+	// And here is the rock'n'roll starts
 	c := context.NewContext()
 	c.Init()
 
@@ -24,6 +30,8 @@ func main() {
 	proxiesv1.Initialize(c)
 
 	c.StartAPIServer()
+
+	colorsv1.GetCurrentColor()
 
 	// CTRL+C handler.
 	interrupt := make(chan os.Signal, 1)
