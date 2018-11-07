@@ -32,15 +32,12 @@ func ChangeColor(w http.ResponseWriter, r *http.Request) {
 	defer apiModuleLog.Info().Str("remote", r.RemoteAddr).TimeDiff("request time (s)", time.Now(), start).Msg("Received color switch HTTP request")
 	switch r.Method {
 	case http.MethodPost:
-		if r.Body == nil {
-			http.Error(w, "Request body missing", 400)
-			return
-		}
 		var requestParams colorRequestParams
 		err := json.NewDecoder(r.Body).Decode(&requestParams)
 		if err != nil {
 			apiModuleLog.Error().Err(err).Msg("Failed to unmarshal POST data")
 			http.Error(w, "Invalid request body", 400)
+			return
 		}
 		err = SetCurrentColor(requestParams.Color)
 		if err != nil {

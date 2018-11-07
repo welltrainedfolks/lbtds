@@ -7,6 +7,7 @@ api:
 proxy:
   storage_type: "file"
   color_file: "/tmp/lbtds-current"
+  pid_file: "/this/path/is/nonexistent"
 colors:
   - name: "green"
     backends:

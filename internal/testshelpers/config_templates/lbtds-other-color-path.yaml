@@ -6,7 +6,8 @@ api:
 # Proxy configuration
 proxy:
   storage_type: "file"
-  color_file: "/tmp/lbtds-current"
+  color_file: "/tmp/lbtds-test-current-for-colors"
+  pid_file: "/tmp/lbtds-test.lock"
 colors:
   - name: "green"
     backends:

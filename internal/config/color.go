@@ -4,8 +4,14 @@
 
 package config
 
-// ProxyConfig represents configuration for single proxy endpoint
-type ProxyConfig struct {
+// Color represents configuration for single color
+type Color struct {
+	Name     string          `yaml:"name"`
+	Backends []BackendConfig `yaml:"backends"`
+}
+
+// BackendConfig represents configuration for single backend endpoint
+type BackendConfig struct {
 	// Type can be HTTP or TCP.
 	Type string `yaml:"type"`
 	// IP and port this proxy will listen on.
