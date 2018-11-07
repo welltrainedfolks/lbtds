@@ -2,12 +2,20 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:14fd70f7be0e0296ca808e124d0103a7d932b90468109deb9d02014493f717db"
-  name = "github.com/pztrn/flagger"
-  packages = ["."]
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
   pruneopts = "UT"
-  revision = "1330c5f1b64f253b0505ee4a2417fb8be856b87d"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
+
+[[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  pruneopts = "UT"
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:5bc8f93f977b72a7a5264725c3bab275e69de0cc3e5c0dc1ee56feb564c33f03"
@@ -22,6 +30,17 @@
   version = "v1.9.1"
 
 [[projects]]
+  digest = "1:c40d65817cdd41fac9aa7af8bed56927bb2d6d47e4fea566a74880f5c2b1c41e"
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "require",
+  ]
+  pruneopts = "UT"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
+
+[[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -33,8 +52,9 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/pztrn/flagger",
     "github.com/rs/zerolog",
+    "github.com/stretchr/testify/assert",
+    "github.com/stretchr/testify/require",
     "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"

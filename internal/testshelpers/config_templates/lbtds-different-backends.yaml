@@ -1,3 +1,7 @@
+# Different configurations: colors have different amount of hosts
+# This configuration is not fully valid, and unsupported by us
+# but it works as of 0.2.0
+
 # API configuration.
 # This API shouldn't be exposed to public!
 api:
@@ -6,7 +10,8 @@ api:
 # Proxy configuration
 proxy:
   storage_type: "file"
-  color_file: "/tmp/lbtds-current"
+  color_file: "/tmp/lbtds-test-current"
+  pid_file: "/tmp/lbtds-test.lock"
 colors:
   - name: "green"
     backends:
@@ -22,6 +27,12 @@ colors:
       destinations:
         - "127.0.0.1:8223"
         - "127.0.0.1:8224"
+    - type: "http"
+      listen_on: "127.0.0.1:8300"
+      source: "web3.host"
+      destinations:
+        - "127.0.0.1:8323"
+        - "127.0.0.1:8324"
   - name: "blue"
     backends:
     - type: "http"

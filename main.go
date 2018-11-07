@@ -14,6 +14,12 @@ import (
 	"lab.wtfteam.pro/wtfteam/lbtds/domains/proxies/v1"
 )
 
+func checkStartupState(goodStartupState bool) {
+	if !goodStartupState {
+		panic("LBTDS stopped due to unrecoverable errors")
+	}
+}
+
 func main() {
 	// Before any real work - lock to OS thread. We shouldn't leave it until
 	// shutdown
@@ -23,7 +29,8 @@ func main() {
 	c := context.NewContext()
 	c.Init()
 
-	c.InitConfiguration()
+	checkStartupState(c.InitConfiguration())
+	checkStartupState(c.CheckPIDFile())
 	c.InitAPIServer()
 
 	colorsv1.Initialize(c)
@@ -42,9 +49,8 @@ func main() {
 		if signalThing == syscall.SIGTERM || signalThing == syscall.SIGINT {
 			c.Logger.Info().Msg("Got " + signalThing.String() + " signal, shutting down...")
 			c.SetShutdown()
-
-			// TODO: actually shutdown proxy streams here
-
+			c.Logger.Info().Msg("Shutting down proxy streams...")
+			proxiesv1.Shutdown()
 			c.Shutdown()
 			shutdownDone <- true
 		}

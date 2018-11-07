@@ -5,6 +5,7 @@ variables:
 
 stages:
   - lint
+  - test
 
 before_script:
   - go version
@@ -20,3 +21,9 @@ golangci:
   script:
     - pwd
     - /usr/local/bin/golangci-lint run
+
+tests:
+  stage: test
+  script:
+    - pwd
+    - go test -test.v -cover `go list ./... | grep -v examples | grep -v internal`
