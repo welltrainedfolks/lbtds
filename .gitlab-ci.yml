@@ -6,6 +6,8 @@ stages:
 
 before_script:
   - go version
+  - mkdir -p $GOPATH/src/lab.wtfteam.pro/wtfteam/
+  - ln -s $(pwd) $GOPATH/src/lab.wtfteam.pro/wtfteam/lbtds
   - cd $GOPATH/src/lab.wtfteam.pro/wtfteam/lbtds
 
 golangci:
