@@ -1,7 +1,4 @@
-image: golang:1.11
-
-variables:
-  GOLANGCI_ARCHIVE: https://github.com/golangci/golangci-lint/releases/download/v1.11.2/golangci-lint-1.11.2-linux-amd64.tar.gz
+image: lab.wtfteam.pro:4567/containers/golangci-lint
 
 stages:
   - lint
@@ -9,18 +6,13 @@ stages:
 
 before_script:
   - go version
-  - mkdir -p $GOPATH/src/lab.wtfteam.pro/wtfteam/
-  - ln -s $(pwd) $GOPATH/src/lab.wtfteam.pro/wtfteam/lbtds
-  - wget $GOLANGCI_ARCHIVE
-  - tar xf *.tar.gz -C /tmp
-  - mv /tmp/*/golangci-lint /usr/local/bin
   - cd $GOPATH/src/lab.wtfteam.pro/wtfteam/lbtds
 
 golangci:
   stage: lint
   script:
     - pwd
-    - /usr/local/bin/golangci-lint run
+    - golangci-lint run
 
 tests:
   stage: test
